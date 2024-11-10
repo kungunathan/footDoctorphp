@@ -1,0 +1,159 @@
+CREATE DATABASE foot_doctor;
+
+USE foot_doctor;
+
+-- Users Table (for both doctors and patients)
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    role ENUM('doctor', 'patient') NOT NULL,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone_number VARCHAR(20),
+    profile_picture VARCHAR(255),
+    PRIMARY_DOCTOR_EMAIL VARCHAR(255), -- For patients
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE users
+ADD COLUMN role ENUM('doctor', 'patient') NOT NULL;
+
+-- Doctors-Patients Relationship Table
+CREATE TABLE doctors_patients (
+    doctor_id INT,
+    patient_id INT,
+    PRIMARY KEY(doctor_id, patient_id),
+    FOREIGN KEY(doctor_id) REFERENCES users(id),
+    FOREIGN KEY(patient_id) REFERENCES users(id)
+);
+
+-- Medical Records Table
+CREATE TABLE medical_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT,
+    file_path VARCHAR(255),
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(patient_id) REFERENCES users(id)
+);
+
+-- Bills Table
+CREATE TABLE bills (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT,
+    doctor_id INT,
+    description TEXT,
+    amount DECIMAL(10, 2),
+    status ENUM('unpaid', 'paid') DEFAULT 'unpaid',
+    FOREIGN KEY(patient_id) REFERENCES users(id),
+    FOREIGN KEY(doctor_id) REFERENCES users(id)
+);
+-- Create the users table
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('doctor', 'patient') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create the patients table
+CREATE TABLE patients (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    doctor_id INT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone_number VARCHAR(20),
+    primary_doctor_email VARCHAR(100),
+    profile_picture VARCHAR(255),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (doctor_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Create the patient_requests table
+CREATE TABLE patient_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    doctor_id INT NOT NULL,
+    patient_name VARCHAR(100),
+    status ENUM('pending', 'accepted', 'rejected') DEFAULT 'pending',
+    request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES users(id),
+    FOREIGN KEY (doctor_id) REFERENCES users(id)
+);
+
+-- Create the bills table
+CREATE TABLE bills (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    doctor_id INT NOT NULL,
+    description TEXT NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    status ENUM('unpaid', 'paid') DEFAULT 'unpaid',
+    bill_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES users(id),
+    FOREIGN KEY (doctor_id) REFERENCES users(id)
+);
+
+-- Create the medical_records table (optional for storing files)
+CREATE TABLE medical_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    doctor_id INT NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES users(id),
+    FOREIGN KEY (doctor_id) REFERENCES users(id)
+);
+
+-- Create the chats table (optional for chat functionality)
+CREATE TABLE chats (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sender_id INT NOT NULL,    -- The user sending the message (patient or doctor)
+    receiver_id INT NOT NULL,  -- The user receiving the message (patient or doctor)
+    message TEXT NOT NULL,     -- The content of the message
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Time of message
+    FOREIGN KEY (sender_id) REFERENCES users(id),
+    FOREIGN KEY (receiver_id) REFERENCES users(id)
+);
+
+);
+ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255) DEFAULT NULL;
+ALTER TABLE users ADD COLUMN name VARCHAR(255) NOT NULL;
+-- Add phone_number column
+ALTER TABLE users ADD COLUMN phone_number VARCHAR(20) NOT NULL;
+
+CREATE TABLE chats (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sender_id INT NOT NULL,  -- User sending the message
+    receiver_id INT NOT NULL,  -- User receiving the message
+    message TEXT NOT NULL,
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sender_id) REFERENCES users(id),
+    FOREIGN KEY (receiver_id) REFERENCES users(id)
+);
+
+CREATE TABLE doctors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    specialization VARCHAR(255) NOT NULL,
+    patient_id INT NOT NULL,  -- This will reference the patient's user_id
+    FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+ALTER TABLE medical_records ADD COLUMN user_id INT NOT NULL;
+
+ALTER TABLE doctors
+ADD COLUMN user_id INT NOT NULL,
+ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+CREATE TABLE patient_doctors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    doctor_id INT NOT NULL,
+    patient_id INT NOT NULL,
+    FOREIGN KEY (doctor_id) REFERENCES doctors(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (patient_id) REFERENCES patients(user_id) ON DELETE CASCADE
+);
+
+
